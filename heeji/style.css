@@ -1,0 +1,56 @@
+.box {
+    width: 1000px;
+    text-align: center;
+    margin: 20px auto;
+    margin-bottom: 30px;
+    padding: 50px 15px;
+    background-color: #ced7ef;
+    color: gray;
+    vertical-align: middle;
+  }
+  .basic-drop-shadow {
+    box-shadow: 0 0 10px;
+  }
+  
+  .btn-3d {
+    
+    justify-content: center;
+    position: relative;
+    display: inline-block;
+    font-size: 20px;
+    padding: 10px 30px;
+    color: white;
+    margin: auto;
+    border-radius: 6px;
+    text-align: center;
+    transition: top .01s linear;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    text-decoration-line:none;
+    width: 100px;
+   
+  }
+  .btn-3d.cyan:hover   {background-color: #82D1E3;}
+  .btn-3d:active {
+    top: 9px;
+  }
+  .btn-3d.cyan {
+    background-color: #7fccde;
+    box-shadow: 0 0 0 1px #7fccde inset,
+          0 0 0 2px rgba(255,255,255,0.15) inset,
+          0 8px 0 0 rgba(102, 164, 178, .6),
+          0 8px 0 1px rgba(0,0,0,.4),
+          0 8px 8px 1px rgba(0,0,0,0.5);
+  }
+  .btn-3d.cyan:active {
+    box-shadow: 0 0 0 1px #7fccde inset,
+          0 0 0 2px rgba(255,255,255,0.15) inset,
+          0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
+  .button
+{
+    justify-content: center;
+    margin-top: 50px;
+    
+    }
+
+    

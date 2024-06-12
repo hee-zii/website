@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * { padding: 0; margin: 0; }
+        canvas {
+            background-color: #eee;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="800" height="600"></canvas>
+
+<div class="button">
+    <a href="" id="startButton"class="btn-3d cyan"style="display: block;"><strong>START</strong></a>
+</div>
+<div class="button">
+    <a href="" id="restartButton"class="btn-3d cyan"style="display: none;"><strong>RESTART</strong></a>
+</div>
+<p>자바스크립트를 이용하여 만든 게임입니다</p>
+<img src="control.png" alt="">
+
+<script>
+    var canvas = document.getElementById("myCanvas");
+    var ctx = canvas.getContext("2d");
+   
+    var x = canvas.width / 2;
+    var y = canvas.height / 2;
+    var dx = 2;
+    var dy = 2;
+    var paddleSize = 50;
+    var paddleX = (canvas.width - paddleSize) / 2;
+    var paddleY = (canvas.height - paddleSize) / 2;
+    var rightPressed = false;
+    var leftPressed = false;
+    var upPressed = false;
+    var downPressed = false;
+    var gameOver = true;
+    var startTime; // 게임 시작 시간 저장 변수
+    var gameTime = 0; // 게임 경과 시간 저장 변수
+    var createObstacleInterval = 2000; // 장애물 생성 간격 초기 설정 (2000 밀리초 = 2초)
+    var obstacleInterval; // 장애물 생성 간격을 저장하는 변수
+    var timerInterval; // 타이머 간격을 저장하는 변수
+    var gameClear=false;
+   
+
+    var img = new Image();
+    img.src = 'image.png';
+    var cat = new Image();
+    cat.src = 'cat.jpg';
+    
+    var obstacles = []; // 배열로 장애물 관리
+    
+    img.onload = function(){
+        // 처음 이미지 그리기
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText("goblin game", canvas.width / 2 -70, canvas.height / 2);
+        ctx.drawImage(img, (canvas.width - paddleSize) / 2, (canvas.height - paddleSize) / 2+70, paddleSize, paddleSize);
+    }
+
+    document.getElementById("startButton").addEventListener("click", function(event) {
+        event.preventDefault();
+        if (gameOver) {
+            startGame();
+        }
+    });
+
+    document.getElementById("restartButton").addEventListener("click", function(event) {
+        event.preventDefault();
+        startGame();
+    });
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function keyDownHandler(e) {
+        if (e.code == 'ArrowRight') {
+            rightPressed = true;
+        }
+        else if (e.code == 'ArrowLeft') {
+            leftPressed = true;
+        }
+        else if (e.code == 'ArrowUp') {
+            upPressed = true;
+        }
+        else if (e.code == 'ArrowDown') {
+            downPressed = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if (e.code == 'ArrowRight') {
+            rightPressed = false;
+        }
+        else if (e.code == 'ArrowLeft') {
+            leftPressed = false;
+        }
+        else if (e.code == 'ArrowUp') {
+            upPressed = false;
+        }
+        else if (e.code == 'ArrowDown') {
+            downPressed = false;
+        }
+    }
+
+    function drawPaddle() {
+        if(!gameOver&&!gameClear){
+            ctx.drawImage(img, paddleX, paddleY, paddleSize, paddleSize);
+        }
+    }
+
+    function drawObstacles() {
+        ctx.fillStyle = "#FF0000"; // 빨간색 장애물
+        for (var i = 0; i < obstacles.length; i++) {
+            ctx.fillRect(obstacles[i].x, obstacles[i].y, 20, 20); // 장애물 그리기
+        }
+    }
+
+    function moveObstacles() {
+        for (var i = 0; i < obstacles.length; i++) {
+            obstacles[i].x += obstacles[i].dx;
+            obstacles[i].y += obstacles[i].dy;
+        }
+    }
+
+    function checkCollision() {
+        for (var i = 0; i < obstacles.length; i++) {
+            if (paddleX < obstacles[i].x + 20 &&
+                paddleX + paddleSize > obstacles[i].x &&
+                paddleY < obstacles[i].y + 20 &&
+                paddleY + paddleSize > obstacles[i].y) {
+                gameOver = true;
+                document.getElementById("restartButton").style.display = "block"; // 다시 시작 버튼 표시
+                break;
+            }
+        }
+    }
+    var animationId;
+    function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPaddle();
+
+    if (!gameOver && !gameClear) {
+        moveObstacles();
+        checkCollision();
+
+        drawObstacles();
+
+        if ((upPressed && rightPressed) || (upPressed && leftPressed) || (downPressed && rightPressed) || (downPressed && leftPressed)) {
+            var diagonalSpeed = Math.sqrt(Math.pow(dx, 2) / 2);
+            if (upPressed && leftPressed) {
+                paddleX -= diagonalSpeed;
+                paddleY -= diagonalSpeed;
+            }
+            if (upPressed && rightPressed) {
+                paddleX += diagonalSpeed;
+                paddleY -= diagonalSpeed;
+            }
+            if (downPressed && leftPressed) {
+                paddleX -= diagonalSpeed;
+                paddleY += diagonalSpeed;
+            }
+            if (downPressed && rightPressed) {
+                paddleX += diagonalSpeed;
+                paddleY += diagonalSpeed;
+            }
+        } else {
+            if (rightPressed && paddleX < canvas.width - paddleSize) {
+                paddleX += dx;
+            }
+            if (leftPressed && paddleX > 0) {
+                paddleX -= dx;
+            }
+            if (downPressed && paddleY < canvas.height - paddleSize) {
+                paddleY += dy;
+            }
+            if (upPressed && paddleY > 0) {
+                paddleY -= dy;
+            }
+        }
+
+        drawPaddle();
+        drawGameTime(); // 게임 시간을 그립니다.
+        updateGameTime(); // 게임 시간을 업데이트합니다.
+
+        if (gameTime >= 60000) {
+            pauseGame(); // 게임을 일시 중지합니다.
+            setTimeout(function(){
+                gameClear=true;
+                open();
+            },2000);
+        } else {
+            requestAnimationFrame(draw);
+        }
+    } // gameClear가 true인 경우에는 게임 클리어를 처리합니다.
+        
+    else { // gameOver가 true인 경우에는 게임 오버를 처리합니다.
+        stopGame();
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "red";
+        ctx.fillText("Game Over", canvas.width / 2 - 70, canvas.height / 2);
+        ctx.drawImage(img, (canvas.width - paddleSize) / 2, (canvas.height - paddleSize) / 2 + 70, paddleSize, paddleSize);
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "gray";
+        ctx.fillText("기록 : " + getGameTime(), (canvas.width - paddleSize) / 2 - 20, (canvas.height - paddleSize) / 2 - 30);
+    }
+}
+function open() {
+  location.href = "folder/테스트.html"; // url 이동
+}
+출처: https://devje.tistory.com/111 [JeLog:티스토리]
+   function gameClear(){
+    
+   }
+    function pauseGame() {
+        cancelAnimationFrame(animationId); // 애니메이션 프레임을 취소하여 렌더링을 중지합니다.
+    }
+
+    function updateGameTime() {
+        gameTime = Date.now() - startTime; // 현재 시간과 시작 시간의 차이를 게임 시간으로 설정합니다.
+    }
+    
+    function startGame() {
+        gameOver = false;
+        gameClear = false;
+        obstacles = []; // 장애물 초기화
+        clearInterval(obstacleInterval); // 이전의 setInterval을 제거
+        createObstacle(); // 첫 번째 장애물 생성
+        document.getElementById("startButton").style.display = "none"; // 시작 버튼 숨기기
+        document.getElementById("restartButton").style.display = "none"; // 다시 시작 버튼 숨기기
+        paddleX = (canvas.width - paddleSize) / 2; // 가로 중앙에 배치
+        paddleY = (canvas.height - paddleSize) / 2; // 세로 중앙에 배치
+        startTime = Date.now(); // 게임 시작 시간 기록
+        draw();
+        createObstacleInterval = 2000; // 초기 장애물 생성 간격 설정 (2000 밀리초 = 2초)
+        // 장애물 생성 간격을 조절하는 setInterval 설정
+        obstacleInterval = setInterval(function() {
+            createObstacle();
+            // 장애물 생성 간격을 1초마다 200씩 줄임
+            if (createObstacleInterval > 10) {
+                createObstacleInterval -= 10;
+            }
+            // 장애물 생성 간격에 따라 재설정된 setInterval 설정
+            clearInterval(obstacleInterval);
+            obstacleInterval = setInterval(arguments.callee, createObstacleInterval);
+        }, createObstacleInterval);
+
+        timerInterval = setInterval(updateGameTime, 1000); // 게임 시간 업데이트 타이머 시작
+        gameTime = 0; // 게임 시간 초기화
+    }
+
+    function stopGame() {
+        clearInterval(timerInterval); // 타이머 멈춤
+        // 게임 종료와 관련된 다른 로직을 여기에 추가할 수 있습니다.
+    }
+
+    function getGameTime() {
+        var seconds = Math.floor(gameTime / 1000); // 밀리초를 초로 변환
+        var minutes = Math.floor(seconds / 60); // 초를 분으로 변환
+        seconds %= 60; // 초를 60으로 나눈 나머지를 구합니다.
+        return minutes + ":" + seconds.toLocaleString('en-US', {minimumIntegerDigits: 2}); // 분:초 형태로 반환
+    }
+
+    function drawGameTime() {
+        ctx.font = "20px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText("Game Time: " + getGameTime(), canvas.width - 200, 20); // 오른쪽 위에 게임 시간을 그립니다.
+    }
+
+    function createObstacle() {
+    // 장애물 생성 수
+    var numObstacles = 3; // 예를 들어 3개의 장애물을 생성하도록 설정
+    
+    for (var i = 0; i < numObstacles; i++) {
+        var startX, startY;
+        if (Math.random() < 0.5) { // Spawn on left or right side
+            startX = Math.random() < 0.5 ? -20 : canvas.width + 20;
+            startY = Math.random() * canvas.height;
+        } else { // Spawn on top or bottom side
+            startX = Math.random() * canvas.width;
+            startY = Math.random() < 0.5 ? -20 : canvas.height + 20;
+        }
+
+        var obstacle = {
+            x: startX,
+            y: startY,
+            dx: 0,
+            dy: 0
+        };
+
+        // Set obstacle's direction towards the goblin
+        var deltaX = paddleX - obstacle.x;
+        var deltaY = paddleY - obstacle.y;
+        var angle = Math.atan2(deltaY, deltaX);
+        obstacle.dx = Math.cos(angle) * 2; // Adjust speed as needed
+        obstacle.dy = Math.sin(angle) * 2; // Adjust speed as needed
+
+        obstacles.push(obstacle); // 장애물 배열에 추가
+    }
+}
+
+</script>
+
+</body>
+</html>
